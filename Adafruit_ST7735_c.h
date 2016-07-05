@@ -1,54 +1,52 @@
 /***************************************************
-  This is a library for the Adafruit 1.8" SPI display.
-
-This library works with the Adafruit 1.8" TFT Breakout w/SD card
-  ----> http://www.adafruit.com/products/358
-The 1.8" TFT shield
-  ----> https://www.adafruit.com/product/802
-The 1.44" TFT breakout
-  ----> https://www.adafruit.com/product/2088
-as well as Adafruit raw 1.8" TFT display
-  ----> http://www.adafruit.com/products/618
-
-  Check out the links above for our tutorials and wiring diagrams
-  These displays use SPI to communicate, 4 or 5 pins are required to
-  interface (RST is optional)
-  Adafruit invests time and resources providing this open source code,
-  please support Adafruit and open-source hardware by purchasing
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.
-  MIT license, all text above must be included in any redistribution
+ * This is an LGPL attempt to port the excelent Adafruit library 
+ * from C++ to C for platforms lacking C++ or Arduino support 
+ * 
+ * This library is Copyright (c) 2016, Allterco, Inc.  All rights reserved
+ * 
  ****************************************************/
 
-#ifndef _ADAFRUIT_ST7735H_
-#define _ADAFRUIT_ST7735H_
+/**********
+ * T his library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation; either version 2.1 of the License, or (at your
+ * option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+ * more details.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+ **********/
 
-#if ARDUINO >= 100
- #include "Arduino.h"
- #include "Print.h"
-#else
- #include "WProgram.h"
-#endif
+//Disclimer (sans licens lines) from C++ sources written by 
+//Limor Fried/Ladyada for Adafruit Industries.
+/***************************************************
+ *  This is a library for the Adafruit 1.8" SPI display.
+ * 
+ * This library works with the Adafruit 1.8" TFT Breakout w/SD card
+ *  ----> http://www.adafruit.com/products/358
+ * The 1.8" TFT shield
+ *  ----> https://www.adafruit.com/product/802
+ * The 1.44" TFT breakout
+ *  ----> https://www.adafruit.com/product/2088
+ * as well as Adafruit raw 1.8" TFT display
+ *  ----> http://www.adafruit.com/products/618
+ * 
+ *  Check out the links above for our tutorials and wiring diagrams
+ *  These displays use SPI to communicate, 4 or 5 pins are required to
+ *  interface (RST is optional)
+ *  Adafruit invests time and resources providing this open source code,
+ *  please support Adafruit and open-source hardware by purchasing
+ *  products from Adafruit!
+ * 
+ ****************************************************/
 
-#include <Adafruit_GFX.h>
+#ifndef _ADAFRUIT_ST7735_C_H_
+#define _ADAFRUIT_ST7735_C_H_
 
-#if defined(__SAM3X8E__)
-  #include <include/pio.h>
-  #define PROGMEM
-  #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-  #define pgm_read_word(addr) (*(const unsigned short *)(addr))
-  typedef unsigned char prog_uchar;
-#elif defined(__AVR__)
-  #include <avr/pgmspace.h>
-#elif defined(ESP8266)
-  #include <pgmspace.h>
-#endif
-
-#if defined(__SAM3X8E__)
-    #undef __FlashStringHelper::F(string_literal)
-    #define F(string_literal) string_literal
-#endif
+#include <stdint.h>
 
 // some flags for initR() :(
 #define INITR_GREENTAB 0x0
