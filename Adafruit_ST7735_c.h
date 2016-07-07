@@ -127,8 +127,7 @@ extern void Adafruit_ST7735_writecmddatabuf(uint8_t c,const uint8_t *d, uint16_t
 extern void Adafruit_ST7735_writecmddatafill(uint8_t c,uint8_t b1,uint8_t b2, uint16_t cnt); //number of two-byte-data blocks to be send
 extern void Adafruit_ST7735_dealy_ms(unsigned ms);
 
-//Adafruit_ST7735(int8_t CS, int8_t RS, int8_t SID, int8_t SCLK, int8_t RST = -1);
-//Adafruit_ST7735(int8_t CS, int8_t RS, int8_t RST = -1);
+
 typedef struct {
 	  int16_t  _width;
 	  int16_t  _height;
