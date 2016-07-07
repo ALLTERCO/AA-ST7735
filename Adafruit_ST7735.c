@@ -46,118 +46,20 @@
 #include "Adafruit_ST7735_c.h"
 
 
-inline uint16_t swapcolor(uint16_t x) { 
+static inline uint16_t swapcolor(uint16_t x) { 
   return (x << 11) | (x & 0x07E0) | (x >> 11);
 }
 
-#if defined (SPI_HAS_TRANSACTION)
-  static SPISettings mySPISettings;
-#elif defined (__AVR__)
-  static uint8_t SPCRbackup;
-  static uint8_t mySPCR;
-#endif
 
 
-
-// Constructor when using software SPI.  All output pins are configurable.
-Adafruit_ST7735::Adafruit_ST7735(int8_t cs, int8_t rs, int8_t sid, int8_t sclk, int8_t rst) 
-  : Adafruit_GFX(ST7735_TFTWIDTH, ST7735_TFTHEIGHT_18)
-{
-  _cs   = cs;
-  _rs   = rs;
-  _sid  = sid;
-  _sclk = sclk;
-  _rst  = rst;
-  hwSPI = false;
-}
-
-
-// Constructor when using hardware SPI.  Faster, but must use SPI pins
-// specific to each board type (e.g. 11,13 for Uno, 51,52 for Mega, etc.)
-Adafruit_ST7735::Adafruit_ST7735(int8_t cs, int8_t rs, int8_t rst) 
-  : Adafruit_GFX(ST7735_TFTWIDTH, ST7735_TFTHEIGHT_18) {
-  _cs   = cs;
-  _rs   = rs;
-  _rst  = rst;
-  hwSPI = true;
-  _sid  = _sclk = 0;
-}
-
-#if defined(CORE_TEENSY) && !defined(__AVR__)
-#define __AVR__
-#endif
-
-inline void Adafruit_ST7735::spiwrite(uint8_t c) {
-
-  //Serial.println(c, HEX);
-
-  if (hwSPI) {
-#if defined (SPI_HAS_TRANSACTION)
-      SPI.transfer(c);
-#elif defined (__AVR__)
-      SPCRbackup = SPCR;
-      SPCR = mySPCR;
-      SPI.transfer(c);
-      SPCR = SPCRbackup;
-//      SPDR = c;
-//      while(!(SPSR & _BV(SPIF)));
-#elif defined (__arm__)
-      SPI.setClockDivider(21); //4MHz
-      SPI.setDataMode(SPI_MODE0);
-      SPI.transfer(c);
-#endif
-  } else {
-    // Fast SPI bitbang swiped from LPD8806 library
-    for(uint8_t bit = 0x80; bit; bit >>= 1) {
-      if(c & bit) *dataport |=  datapinmask;
-      else        *dataport &= ~datapinmask;
-      *clkport |=  clkpinmask;
-      *clkport &= ~clkpinmask;
-    }
-  }
-}
-
-
-void Adafruit_ST7735::writecommand(uint8_t c) {
-#if defined (SPI_HAS_TRANSACTION)
-  SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport &= ~rspinmask;
-  *csport &= ~cspinmask;
-
-  //Serial.print("C ");
-  spiwrite(c);
-
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
-}
-
-
-void Adafruit_ST7735::writedata(uint8_t c) {
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-    
-  //Serial.print("D ");
-  spiwrite(c);
-
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
-}
 
 // Rather than a bazillion writecommand() and writedata() calls, screen
 // initialization commands and arguments are organized in these tables
-// stored in PROGMEM.  The table may look bulky, but that's mostly the
+// The table may look bulky, but that's mostly the
 // formatting -- storage-wise this is hundreds of bytes more compact
 // than the equivalent code.  Companion function follows.
 #define DELAY 0x80
-static const uint8_t PROGMEM
+static const uint8_t 
   Bcmd[] = {                  // Initialization commands for 7735B screens
     18,                       // 18 commands in list:
     ST7735_SWRESET,   DELAY,  //  1: Software reset, no args, w/delay
@@ -300,138 +202,88 @@ static const uint8_t PROGMEM
 
 // Companion code to the above tables.  Reads and issues
 // a series of LCD commands stored in PROGMEM byte array.
-void Adafruit_ST7735::commandList(const uint8_t *addr) {
+void Adafruit_ST7735_commandList(const Adafruit_ST7735_displayInfo_t* di, const uint8_t *addr) { 
+	(void)di; //we ignore di here
 
-  uint8_t  numCommands, numArgs;
-  uint16_t ms;
+	uint8_t  numCommands, numArgs;
+	uint16_t ms;
 
-  numCommands = pgm_read_byte(addr++);   // Number of commands to follow
-  while(numCommands--) {                 // For each command...
-    writecommand(pgm_read_byte(addr++)); //   Read, issue command
-    numArgs  = pgm_read_byte(addr++);    //   Number of args to follow
-    ms       = numArgs & DELAY;          //   If hibit set, delay follows args
-    numArgs &= ~DELAY;                   //   Mask out delay bit
-    while(numArgs--) {                   //   For each argument...
-      writedata(pgm_read_byte(addr++));  //     Read, issue argument
-    }
+	numCommands = *addr;addr++;   // Number of commands to follow
+	while(numCommands--) {                 // For each command...
+		uint8_t cmd=*addr;addr++;
+		numArgs  = *addr;addr++;    //   Number of args to follow
+		ms       = numArgs & DELAY;          //   If hibit set, delay follows args
+		numArgs &= ~DELAY;                   //   Mask out delay bit
+		Adafruit_ST7735_writecmddatabuf(cmd,addr,numArgs); addr+=numArgs;
 
-    if(ms) {
-      ms = pgm_read_byte(addr++); // Read post-command delay time (ms)
-      if(ms == 255) ms = 500;     // If 255, delay for 500 ms
-      delay(ms);
-    }
-  }
-}
-
-
-// Initialization code common to both 'B' and 'R' type displays
-void Adafruit_ST7735::commonInit(const uint8_t *cmdList) {
-  colstart  = rowstart = 0; // May be overridden in init func
-
-  pinMode(_rs, OUTPUT);
-  pinMode(_cs, OUTPUT);
-  csport    = portOutputRegister(digitalPinToPort(_cs));
-  rsport    = portOutputRegister(digitalPinToPort(_rs));
-  cspinmask = digitalPinToBitMask(_cs);
-  rspinmask = digitalPinToBitMask(_rs);
-
-  if(hwSPI) { // Using hardware SPI
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.begin();
-    mySPISettings = SPISettings(8000000, MSBFIRST, SPI_MODE0);
-#elif defined (__AVR__)
-    SPCRbackup = SPCR;
-    SPI.begin();
-    SPI.setClockDivider(SPI_CLOCK_DIV4);
-    SPI.setDataMode(SPI_MODE0);
-    mySPCR = SPCR; // save our preferred state
-    //Serial.print("mySPCR = 0x"); Serial.println(SPCR, HEX);
-    SPCR = SPCRbackup;  // then restore
-#elif defined (__SAM3X8E__)
-    SPI.begin();
-    SPI.setClockDivider(21); //4MHz
-    SPI.setDataMode(SPI_MODE0);
-#endif
-  } else {
-    pinMode(_sclk, OUTPUT);
-    pinMode(_sid , OUTPUT);
-    clkport     = portOutputRegister(digitalPinToPort(_sclk));
-    dataport    = portOutputRegister(digitalPinToPort(_sid));
-    clkpinmask  = digitalPinToBitMask(_sclk);
-    datapinmask = digitalPinToBitMask(_sid);
-    *clkport   &= ~clkpinmask;
-    *dataport  &= ~datapinmask;
-  }
-
-  // toggle RST low to reset; CS low so it'll listen to us
-  *csport &= ~cspinmask;
-  if (_rst) {
-    pinMode(_rst, OUTPUT);
-    digitalWrite(_rst, HIGH);
-    delay(500);
-    digitalWrite(_rst, LOW);
-    delay(500);
-    digitalWrite(_rst, HIGH);
-    delay(500);
-  }
-
-  if(cmdList) commandList(cmdList);
+		if(ms) {
+			ms = *addr;addr++; // Read post-command delay time (ms)
+			if(ms == 255) ms = 500;     // If 255, delay for 500 ms
+			Adafruit_ST7735_dealy_ms(ms);
+		}
+	}
 }
 
 
 // Initialization for ST7735B screens
-void Adafruit_ST7735::initB(void) {
-  commonInit(Bcmd);
+const Adafruit_ST7735_displayInfo_t*  Adafruit_ST7735_initB(Adafruit_ST7735_displayInfo_t* di) {
+	MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,0,0,0);
+	Adafruit_ST7735_commandList(di,Bcmd);
+	return di;
 }
 
 
 // Initialization for ST7735R screens (green or red tabs)
-void Adafruit_ST7735::initR(uint8_t options) {
-  commonInit(Rcmd1);
-  if(options == INITR_GREENTAB) {
-    commandList(Rcmd2green);
-    colstart = 2;
-    rowstart = 1;
-  } else if(options == INITR_144GREENTAB) {
-    _height = ST7735_TFTHEIGHT_144;
-    commandList(Rcmd2green144);
-    colstart = 2;
-    rowstart = 3;
-  } else {
-    // colstart, rowstart left at default '0' values
-    commandList(Rcmd2red);
-  }
-  commandList(Rcmd3);
+const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initR(Adafruit_ST7735_displayInfo_t* di,uint8_t options) {
+	if(options == INITR_GREENTAB) {
+		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,2,1,options);
+		Adafruit_ST7735_commandList(di,Rcmd1);
+		Adafruit_ST7735_commandList(di,Rcmd2green);
+	} else if(options == INITR_144GREENTAB) {
+		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_144,2,3,options);
+		Adafruit_ST7735_commandList(di,Rcmd1);
+		Adafruit_ST7735_commandList(di,Rcmd2green144);
+	} else {
+		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,0,0,options);
+		Adafruit_ST7735_commandList(di,Rcmd2red);
+	}
+	Adafruit_ST7735_commandList(di,Rcmd3);
 
-  // if black, change MADCTL color filter
-  if (options == INITR_BLACKTAB) {
-    writecommand(ST7735_MADCTL);
-    writedata(0xC0);
-  }
+	// if black, change MADCTL color filter
+	if (options == INITR_BLACKTAB) {
+		uint8_t data=0xC0;
+		Adafruit_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
+	}
 
-  tabcolor = options;
+	return di;
 }
 
 
-void Adafruit_ST7735::setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1,
- uint8_t y1) {
+void Adafruit_ST7735_setWindowCD(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata) {
+	uint8_t db[4];
+	//             XSTART                           XEND
+	db[0]=0x00;db[1]=x0+di->colstart;db[2]=0x00;db[3]=x1+di->colstart;
+	Adafruit_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
 
-  writecommand(ST7735_CASET); // Column addr set
-  writedata(0x00);
-  writedata(x0+colstart);     // XSTART 
-  writedata(0x00);
-  writedata(x1+colstart);     // XEND
-
-  writecommand(ST7735_RASET); // Row addr set
-  writedata(0x00);
-  writedata(y0+rowstart);     // YSTART
-  writedata(0x00);
-  writedata(y1+rowstart);     // YEND
-
-  writecommand(ST7735_RAMWR); // write to RAM
+	//         YSTART                YEND
+	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
+	Adafruit_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
+	Adafruit_ST7735_writecmddatabuf(ST7735_RAMWR,colordata,(x1-x0)*(y1-y0)*2); // write to RAM
 }
 
+void Adafruit_ST7735_setWindowFILL(const Adafruit_ST7735_displayInfo_t* di, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, const uint16_t color){
+	uint8_t db[4];
+	//             XSTART                           XEND
+	db[0]=0x00;db[1]=x0+di->colstart;db[2]=0x00;db[3]=x1+di->colstart;
+	Adafruit_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
 
+	//         YSTART                YEND
+	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
+	Adafruit_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
+	Adafruit_ST7735_writecmddatafill(ST7735_RAMWR,color>>8,color &0x0ff,(x1-x0)*(y1-y0)); // write to RAM
+}
+
+/*
 void Adafruit_ST7735::pushColor(uint16_t color) {
 #if defined (SPI_HAS_TRANSACTION)
     SPI.beginTransaction(mySPISettings);
@@ -439,26 +291,6 @@ void Adafruit_ST7735::pushColor(uint16_t color) {
   *rsport |=  rspinmask;
   *csport &= ~cspinmask;
   
-  spiwrite(color >> 8);
-  spiwrite(color);
-
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
-}
-
-void Adafruit_ST7735::drawPixel(int16_t x, int16_t y, uint16_t color) {
-
-  if((x < 0) ||(x >= _width) || (y < 0) || (y >= _height)) return;
-
-  setAddrWindow(x,y,x+1,y+1);
-
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
   
   spiwrite(color >> 8);
   spiwrite(color);
@@ -467,102 +299,54 @@ void Adafruit_ST7735::drawPixel(int16_t x, int16_t y, uint16_t color) {
 #if defined (SPI_HAS_TRANSACTION)
     SPI.endTransaction();
 #endif
+}*/
+
+void Adafruit_ST7735_drawPixel(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, uint16_t color) {
+	if((x < 0) ||(x >= di->_width) || (y < 0) || (y >= di->_height)) return;
+	uint8_t cd[2]={color >> 8,color&0x0ff};
+	Adafruit_ST7735_setWindowCD(di,x,y,x+1,y+1,cd);
 }
 
 
-void Adafruit_ST7735::drawFastVLine(int16_t x, int16_t y, int16_t h,
- uint16_t color) {
-
-  // Rudimentary clipping
-  if((x >= _width) || (y >= _height)) return;
-  if((y+h-1) >= _height) h = _height-y;
-  setAddrWindow(x, y, x, y+h-1);
-
-  uint8_t hi = color >> 8, lo = color;
-    
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-  while (h--) {
-    spiwrite(hi);
-    spiwrite(lo);
-  }
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
+void Adafruit_ST7735_drawFastVLine(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t h, uint16_t color) {
+	// Rudimentary clipping
+	if((x >= di->_width) || (y >= di->_height)) return;
+	if((y+h-1) >= di->_height) h = di->_height-y;
+	Adafruit_ST7735_setWindowFILL(di,x, y, x, y+h-1,color);
 }
 
 
-void Adafruit_ST7735::drawFastHLine(int16_t x, int16_t y, int16_t w,
-  uint16_t color) {
+void Adafruit_ST7735_drawFastHLine(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t w, uint16_t color) {
 
-  // Rudimentary clipping
-  if((x >= _width) || (y >= _height)) return;
-  if((x+w-1) >= _width)  w = _width-x;
-  setAddrWindow(x, y, x+w-1, y);
-
-  uint8_t hi = color >> 8, lo = color;
-
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-  while (w--) {
-    spiwrite(hi);
-    spiwrite(lo);
-  }
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
+	// Rudimentary clipping
+	if((x >= di->_width) || (y >= di->_height)) return;
+	if((x+w-1) >= di->_width)  w = di->_width-x;
+	Adafruit_ST7735_setWindowFILL(di,x, y, x+w-1, y,color);
 }
 
 
 
-void Adafruit_ST7735::fillScreen(uint16_t color) {
-  fillRect(0, 0,  _width, _height, color);
+void Adafruit_ST7735_fillScreen(const Adafruit_ST7735_displayInfo_t* di,uint16_t color) {
+	Adafruit_ST7735_setWindowFILL(di,0, 0,  di->_width, di->_height, color);
 }
 
 
 
 // fill a rectangle
-void Adafruit_ST7735::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-  uint16_t color) {
+void Adafruit_ST7735_fillRect(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
 
   // rudimentary clipping (drawChar w/big text requires this)
-  if((x >= _width) || (y >= _height)) return;
-  if((x + w - 1) >= _width)  w = _width  - x;
-  if((y + h - 1) >= _height) h = _height - y;
+  if((x >= di->_width) || (y >= di->_height)) return;
+  if((x + w - 1) >= di->_width)  w = di->_width  - x;
+  if((y + h - 1) >= di->_height) h = di->_height - y;
 
-  setAddrWindow(x, y, x+w-1, y+h-1);
+  Adafruit_ST7735_setWindowFILL(di,x, y, x+w-1, y+h-1,color);
 
-  uint8_t hi = color >> 8, lo = color;
-    
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-  for(y=h; y>0; y--) {
-    for(x=w; x>0; x--) {
-      spiwrite(hi);
-      spiwrite(lo);
-    }
-  }
-
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
 }
 
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-uint16_t Adafruit_ST7735::Color565(uint8_t r, uint8_t g, uint8_t b) {
+uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
@@ -575,181 +359,56 @@ uint16_t Adafruit_ST7735::Color565(uint8_t r, uint8_t g, uint8_t b) {
 #define MADCTL_BGR 0x08
 #define MADCTL_MH  0x04
 
-void Adafruit_ST7735::setRotation(uint8_t m) {
+void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di,uint8_t m) {
+	uint8_t data;
+	m = m % 4; // can't be higher than 3
+	switch (m) {
+	case 0:
+		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MX | MADCTL_MY | MADCTL_RGB;
+		data=MADCTL_MX | MADCTL_MY | MADCTL_BGR;
+		
+		di->_width  = ST7735_TFTWIDTH;
+		
+		if (di->tabcolor == INITR_144GREENTAB) di->_height = ST7735_TFTHEIGHT_144;
+		else di->_height = ST7735_TFTHEIGHT_18;
 
-  writecommand(ST7735_MADCTL);
-  rotation = m % 4; // can't be higher than 3
-  switch (rotation) {
-   case 0:
-     if (tabcolor == INITR_BLACKTAB) {
-       writedata(MADCTL_MX | MADCTL_MY | MADCTL_RGB);
-     } else {
-       writedata(MADCTL_MX | MADCTL_MY | MADCTL_BGR);
-     }
-     _width  = ST7735_TFTWIDTH;
+		break;
+	case 1:
+		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MY | MADCTL_MV | MADCTL_RGB;
+		else data =MADCTL_MY | MADCTL_MV | MADCTL_BGR;
+		
 
-     if (tabcolor == INITR_144GREENTAB) 
-       _height = ST7735_TFTHEIGHT_144;
-     else
-       _height = ST7735_TFTHEIGHT_18;
+		if (di->tabcolor == INITR_144GREENTAB) di->_width = ST7735_TFTHEIGHT_144;
+		else di->_width = ST7735_TFTHEIGHT_18;
 
-     break;
-   case 1:
-     if (tabcolor == INITR_BLACKTAB) {
-       writedata(MADCTL_MY | MADCTL_MV | MADCTL_RGB);
-     } else {
-       writedata(MADCTL_MY | MADCTL_MV | MADCTL_BGR);
-     }
+		di->_height = ST7735_TFTWIDTH;
+		break;
+	case 2:
+		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_RGB;
+		else data=MADCTL_BGR;
+		
+		di->_width  = ST7735_TFTWIDTH;
+		if (di->tabcolor == INITR_144GREENTAB) di->_height = ST7735_TFTHEIGHT_144;
+		else di->_height = ST7735_TFTHEIGHT_18;
 
-     if (tabcolor == INITR_144GREENTAB) 
-       _width = ST7735_TFTHEIGHT_144;
-     else
-       _width = ST7735_TFTHEIGHT_18;
+	break;
+	case 3:
+		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MX | MADCTL_MV | MADCTL_RGB;
+		else data=MADCTL_MX | MADCTL_MV | MADCTL_BGR;
+		
+		if (di->tabcolor == INITR_144GREENTAB) di->_width = ST7735_TFTHEIGHT_144;
+		else di->_width = ST7735_TFTHEIGHT_18;
 
-     _height = ST7735_TFTWIDTH;
-     break;
-  case 2:
-     if (tabcolor == INITR_BLACKTAB) {
-       writedata(MADCTL_RGB);
-     } else {
-       writedata(MADCTL_BGR);
-     }
-     _width  = ST7735_TFTWIDTH;
-     if (tabcolor == INITR_144GREENTAB) 
-       _height = ST7735_TFTHEIGHT_144;
-     else
-       _height = ST7735_TFTHEIGHT_18;
+		di->_height = ST7735_TFTWIDTH;
+		break;
+	}
+	Adafruit_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
 
-    break;
-   case 3:
-     if (tabcolor == INITR_BLACKTAB) {
-       writedata(MADCTL_MX | MADCTL_MV | MADCTL_RGB);
-     } else {
-       writedata(MADCTL_MX | MADCTL_MV | MADCTL_BGR);
-     }
-     if (tabcolor == INITR_144GREENTAB) 
-       _width = ST7735_TFTHEIGHT_144;
-     else
-       _width = ST7735_TFTHEIGHT_18;
-
-     _height = ST7735_TFTWIDTH;
-     break;
-  }
 }
 
 
-void Adafruit_ST7735::invertDisplay(boolean i) {
-  writecommand(i ? ST7735_INVON : ST7735_INVOFF);
+void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint8_t i) {
+	(void)di;
+	Adafruit_ST7735_writecmddatabuf(i ? ST7735_INVON : ST7735_INVOFF,(uint8_t*)0/*NULL*/,0);
 }
 
-
-////////// stuff not actively being used, but kept for posterity
-/*
-
- uint8_t Adafruit_ST7735::spiread(void) {
- uint8_t r = 0;
- if (_sid > 0) {
- r = shiftIn(_sid, _sclk, MSBFIRST);
- } else {
- //SID_DDR &= ~_BV(SID);
- //int8_t i;
- //for (i=7; i>=0; i--) {
- //  SCLK_PORT &= ~_BV(SCLK);
- //  r <<= 1;
- //  r |= (SID_PIN >> SID) & 0x1;
- //  SCLK_PORT |= _BV(SCLK);
- //}
- //SID_DDR |= _BV(SID);
- 
- }
- return r;
- }
- 
- 
- void Adafruit_ST7735::dummyclock(void) {
- 
- if (_sid > 0) {
- digitalWrite(_sclk, LOW);
- digitalWrite(_sclk, HIGH);
- } else {
- // SCLK_PORT &= ~_BV(SCLK);
- //SCLK_PORT |= _BV(SCLK);
- }
- }
- uint8_t Adafruit_ST7735::readdata(void) {
- *portOutputRegister(rsport) |= rspin;
- 
- *portOutputRegister(csport) &= ~ cspin;
- 
- uint8_t r = spiread();
- 
- *portOutputRegister(csport) |= cspin;
- 
- return r;
- 
- } 
- 
- uint8_t Adafruit_ST7735::readcommand8(uint8_t c) {
- digitalWrite(_rs, LOW);
- 
- *portOutputRegister(csport) &= ~ cspin;
- 
- spiwrite(c);
- 
- digitalWrite(_rs, HIGH);
- pinMode(_sid, INPUT); // input!
- digitalWrite(_sid, LOW); // low
- spiread();
- uint8_t r = spiread();
- 
- 
- *portOutputRegister(csport) |= cspin;
- 
- 
- pinMode(_sid, OUTPUT); // back to output
- return r;
- }
- 
- 
- uint16_t Adafruit_ST7735::readcommand16(uint8_t c) {
- digitalWrite(_rs, LOW);
- if (_cs)
- digitalWrite(_cs, LOW);
- 
- spiwrite(c);
- pinMode(_sid, INPUT); // input!
- uint16_t r = spiread();
- r <<= 8;
- r |= spiread();
- if (_cs)
- digitalWrite(_cs, HIGH);
- 
- pinMode(_sid, OUTPUT); // back to output
- return r;
- }
- 
- uint32_t Adafruit_ST7735::readcommand32(uint8_t c) {
- digitalWrite(_rs, LOW);
- if (_cs)
- digitalWrite(_cs, LOW);
- spiwrite(c);
- pinMode(_sid, INPUT); // input!
- 
- dummyclock();
- dummyclock();
- 
- uint32_t r = spiread();
- r <<= 8;
- r |= spiread();
- r <<= 8;
- r |= spiread();
- r <<= 8;
- r |= spiread();
- if (_cs)
- digitalWrite(_cs, HIGH);
- 
- pinMode(_sid, OUTPUT); // back to output
- return r;
- }
- 
- */

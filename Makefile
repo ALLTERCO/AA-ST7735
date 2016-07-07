@@ -1,7 +1,7 @@
 default: banner staticlib
 
 BUILDDIR=build
-AR_MODE_R?=pr
+
 
 OBJS=$(BUILDDIR)/Adafruit_ST7735.o
 
@@ -16,11 +16,9 @@ $(BUILDDIR)/%.o:%.c
 staticlib: dirs  Adafruit_ST7735_c.a
 
 Adafruit_ST7735_c.a: $(OBJS)
-	$(AR) $(AR_MODE_R) $(ARFLAGS)  $@ $^
+	$(AR) $(ARFLAGS)  $@ $^
 banner:
-	@echo -ne "====================================\n=== CC VERSION: "
-	@$(CC) --version | head -n 1
-	@echo ====================================
+	@echo -ne "====================================\n=== CC VERSION: "`$(CC) --version | head -n 1`"\n====================================\n"
 #dependancies:
 Adafruit_ST7735.o:Adafruit_ST7735.c
 Adafruit_ST7735.c:Adafruit_ST7735_c.h

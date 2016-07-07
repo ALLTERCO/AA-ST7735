@@ -120,67 +120,52 @@
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
 
+//You must provide this functions 
+//to keep things simple we assume single display per device
+//and we do not pass display info to HW Line driver functions below
+extern void Adafruit_ST7735_writecmddatabuf(uint8_t c,const uint8_t *d, uint16_t cnt);
+extern void Adafruit_ST7735_writecmddatafill(uint8_t c,uint8_t b1,uint8_t b2, uint16_t cnt); //number of two-byte-data blocks to be send
+extern void Adafruit_ST7735_dealy_ms(unsigned ms);
 
-class Adafruit_ST7735 : public Adafruit_GFX {
+//Adafruit_ST7735(int8_t CS, int8_t RS, int8_t SID, int8_t SCLK, int8_t RST = -1);
+//Adafruit_ST7735(int8_t CS, int8_t RS, int8_t RST = -1);
+typedef struct {
+	  int16_t  _width;
+	  int16_t  _height;
+	  uint8_t colstart;
+	  uint8_t rowstart;
+	  uint8_t  tabcolor;
+} Adafruit_ST7735_displayInfo_t;
+//a macro used in Adafruit_ST7735_initX
+#define MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,h,c,r,t) \
+	di->_width=ST7735_TFTWIDTH;\
+	di->_height=h;\
+	di->colstart=c;\
+	di->rowstart=r;\
+	di->tabcolor=t;
+	
 
- public:
+//this functions init the displayInfo in di return the pointer to it just to make more obvious how to obtain const Adafruit_ST7735_displayInfo_t*
+const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initB(Adafruit_ST7735_displayInfo_t* di); // for ST7735B displays
+const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initR(Adafruit_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */); // for ST7735R
 
-  Adafruit_ST7735(int8_t CS, int8_t RS, int8_t SID, int8_t SCLK, int8_t RST = -1);
-  Adafruit_ST7735(int8_t CS, int8_t RS, int8_t RST = -1);
+//all the folowing functions get a const Adafruit_ST7735_displayInfo_t* di for consistancy though not all of them might need it
+void Adafruit_ST7735_setWindowCD(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata);
+void Adafruit_ST7735_setWindowFILL(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint16_t color);
+void Adafruit_ST7735_fillScreen(const Adafruit_ST7735_displayInfo_t* di, uint16_t color);
+void Adafruit_ST7735_drawPixel(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, uint16_t color);
+void Adafruit_ST7735_drawFastVLine(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t h, uint16_t color);
+void Adafruit_ST7735_drawFastHLine(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, uint16_t color);
+void Adafruit_ST7735_fillRect(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di, uint8_t r);
+void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint8_t i /*bool*/); 
 
-  void     initB(void),                             // for ST7735B displays
-           initR(uint8_t options = INITR_GREENTAB), // for ST7735R
-           setAddrWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1),
-           pushColor(uint16_t color),
-           fillScreen(uint16_t color),
-           drawPixel(int16_t x, int16_t y, uint16_t color),
-           drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
-           drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
-           fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-             uint16_t color),
-           setRotation(uint8_t r),
-           invertDisplay(boolean i);
-  uint16_t Color565(uint8_t r, uint8_t g, uint8_t b);
+//simple "scripting" function used mainly in init proc
+void Adafruit_ST7735_commandList(const Adafruit_ST7735_displayInfo_t* di, const uint8_t *addr);
 
-  /* These are not for current use, 8-bit protocol only!
-  uint8_t  readdata(void),
-           readcommand8(uint8_t);
-  uint16_t readcommand16(uint8_t);
-  uint32_t readcommand32(uint8_t);
-  void     dummyclock(void);
-  */
+//colorspace convertion utility func
+uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
- private:
-  uint8_t  tabcolor;
 
-  void     spiwrite(uint8_t),
-           writecommand(uint8_t c),
-           writedata(uint8_t d),
-           commandList(const uint8_t *addr),
-           commonInit(const uint8_t *cmdList);
-//uint8_t  spiread(void);
-
-  boolean  hwSPI;
-
-#if defined(__AVR__) || defined(CORE_TEENSY)
-  volatile uint8_t *dataport, *clkport, *csport, *rsport;
-  uint8_t  _cs, _rs, _rst, _sid, _sclk,
-           datapinmask, clkpinmask, cspinmask, rspinmask,
-           colstart, rowstart; // some displays need this changed
-#elif defined(__arm__)
-  volatile RwReg  *dataport, *clkport, *csport, *rsport;
-  uint32_t  _cs, _rs, _sid, _sclk,
-            datapinmask, clkpinmask, cspinmask, rspinmask,
-            colstart, rowstart; // some displays need this changed
-  int32_t   _rst;  // Must use signed type since a -1 sentinel is assigned.
-#elif defined(ESP8266)
-    volatile uint32_t *dataport, *clkport, *csport, *rsport;
-    uint32_t  _cs, _rs, _rst, _sid, _sclk,
-    datapinmask, clkpinmask, cspinmask, rspinmask,
-    colstart, rowstart; // some displays need this changed
-
-#endif
-
-};
 
 #endif
