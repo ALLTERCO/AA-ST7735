@@ -11,7 +11,7 @@ clean:
 	rm -f AA_ST7735_c.a $(OBJS)
 	
 $(BUILDDIR)/%.o:%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -Wall -c -o $@ $<
 
 staticlib: dirs  AA_ST7735_c.a
 
