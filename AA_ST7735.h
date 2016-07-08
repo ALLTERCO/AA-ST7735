@@ -48,6 +48,14 @@
 
 #include <stdint.h>
 
+#ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
+#include "AA-GFX/AA_GFX_common.h"
+#include "AA-GFX/gfxfont.h"
+#else 
+#define AA_GFX_COMMON_DI_INCLUDES
+#define AA_GFX_COMMON_DI_INITS(di)
+#endif
+
 // some flags for initR() :(
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
@@ -123,62 +131,64 @@
 //You must provide this functions 
 //to keep things simple we assume single display per device
 //and we do not pass display info to HW Line driver functions below
-extern void Adafruit_ST7735_writecmddatabuf(uint8_t c,const uint8_t *d, uint16_t cnt);
-extern void Adafruit_ST7735_writecmddatafill(uint8_t c,uint8_t b1,uint8_t b2, uint16_t cnt); //number of two-byte-data blocks to be send
-extern void Adafruit_ST7735_dealy_ms(unsigned ms);
+extern void AA_ST7735_writecmddatabuf(uint8_t c,const uint8_t *d, uint16_t cnt);
+extern void AA_ST7735_writecmddatafill(uint8_t c,uint8_t b1,uint8_t b2, uint16_t cnt); //number of two-byte-data blocks to be send
+extern void AA_ST7735_dealy_ms(unsigned ms);
 
 
 typedef struct {
-	  int16_t  _width;
-	  int16_t  _height;
+	  int16_t width;
+	  int16_t height;
 	  uint8_t colstart;
 	  uint8_t rowstart;
-	  uint8_t  tabcolor;
-} Adafruit_ST7735_displayInfo_t;
-//a macro used in Adafruit_ST7735_initX
+	  uint8_t tabcolor;
+	  AA_GFX_COMMON_DI_INCLUDES
+} AA_ST7735_displayInfo_t;
+//a macro used in AA_ST7735_initX
 #define MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,h,c,r,t) \
-	di->_width=ST7735_TFTWIDTH;\
-	di->_height=h;\
+	di->width=ST7735_TFTWIDTH;\
+	di->height=h;\
 	di->colstart=c;\
 	di->rowstart=r;\
-	di->tabcolor=t;
-	
+	di->tabcolor=t;\
+	AA_GFX_COMMON_DI_INITS(di)
 
-//this functions init the displayInfo in di return the pointer to it just to make more obvious how to obtain const Adafruit_ST7735_displayInfo_t*
-const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initB(Adafruit_ST7735_displayInfo_t* di); // for ST7735B displays
-const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initR(Adafruit_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */); // for ST7735R
+//this functions init the displayInfo in di return the pointer to it just to make more obvious how to obtain const AA_ST7735_displayInfo_t*
+const AA_ST7735_displayInfo_t* AA_ST7735_initB(AA_ST7735_displayInfo_t* di); // for ST7735B displays
+const AA_ST7735_displayInfo_t* AA_ST7735_initR(AA_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */); // for ST7735R
 
-//all the folowing functions get a const Adafruit_ST7735_displayInfo_t* di for consistancy though not all of them might need it
-void Adafruit_ST7735_setWindowCD(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata);
-void Adafruit_ST7735_setWindowFILL(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint16_t color);
-void Adafruit_ST7735_fillScreen(const Adafruit_ST7735_displayInfo_t* di, uint16_t color);
-void Adafruit_ST7735_drawPixel(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, uint16_t color);
-void Adafruit_ST7735_drawFastVLine(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t h, uint16_t color);
-void Adafruit_ST7735_drawFastHLine(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, uint16_t color);
-void Adafruit_ST7735_fillRect(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di, uint8_t r);
-void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint8_t i /*bool*/); 
+//all the folowing functions get a const AA_ST7735_displayInfo_t* di for consistancy though not all of them might need it
+void AA_ST7735_setWindowCD(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata);
+void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint16_t color);
+void AA_ST7735_fillScreen(const AA_ST7735_displayInfo_t* di, uint16_t color);
+void AA_ST7735_drawPixel(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, uint16_t color);
+void AA_ST7735_drawFastVLine(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t h, uint16_t color);
+void AA_ST7735_drawFastHLine(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, uint16_t color);
+void AA_ST7735_fillRect(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+void AA_ST7735_setRotation(AA_ST7735_displayInfo_t* di, uint8_t r);
+void AA_ST7735_invertDisplay(const AA_ST7735_displayInfo_t* di, uint8_t i /*bool*/); 
 
 //simple "scripting" function used mainly in init proc
-void Adafruit_ST7735_commandList(const Adafruit_ST7735_displayInfo_t* di, const uint8_t *addr);
+void AA_ST7735_commandList(const AA_ST7735_displayInfo_t* di, const uint8_t *addr);
 
 //colorspace convertion utility func
-uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
+uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
 
-#define GFX_drawPixel Adafruit_ST7735_drawPixel
-#define GFX_drawFastHLine Adafruit_ST7735_drawFastHLine
-#define GFX_drawFastVLine Adafruit_ST7735_drawFastVLine
-#define GFX_fillRect Adafruit_ST7735_fillRect
+#define GFX_drawPixel AA_ST7735_drawPixel
+#define GFX_drawFastHLine AA_ST7735_drawFastHLine
+#define GFX_drawFastVLine AA_ST7735_drawFastVLine
+#define GFX_fillRect AA_ST7735_fillRect
 
-#define GFX_setWindowFILL Adafruit_ST7735_setWindowFILL
-#define GFX_setWindowCD Adafruit_ST7735_setWindowCD
+#define GFX_setWindowFILL AA_ST7735_setWindowFILL
+#define GFX_setWindowCD AA_ST7735_setWindowCD
 
-#define GFX_displayInfo_t Adafruit_ST7735_displayInfo_t
+#define GFX_displayInfo_t AA_ST7735_displayInfo_t
 
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
 #include "AA_ST7735_custom_gfx.h"
+#include "AA-GFX/AA_GFX_proto.h"
 #else //use full GFX config
 
 #ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled

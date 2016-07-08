@@ -45,11 +45,11 @@
 
 #include "AA_ST7735.h"
 
-
+/*
 static inline uint16_t swapcolor(uint16_t x) { 
   return (x << 11) | (x & 0x07E0) | (x >> 11);
 }
-
+*/
 
 
 
@@ -202,7 +202,7 @@ static const uint8_t
 
 // Companion code to the above tables.  Reads and issues
 // a series of LCD commands stored in PROGMEM byte array.
-void Adafruit_ST7735_commandList(const Adafruit_ST7735_displayInfo_t* di, const uint8_t *addr) { 
+void AA_ST7735_commandList(const AA_ST7735_displayInfo_t* di, const uint8_t *addr) { 
 	(void)di; //we ignore di here
 
 	uint8_t  numCommands, numArgs;
@@ -214,139 +214,123 @@ void Adafruit_ST7735_commandList(const Adafruit_ST7735_displayInfo_t* di, const 
 		numArgs  = *addr;addr++;    //   Number of args to follow
 		ms       = numArgs & DELAY;          //   If hibit set, delay follows args
 		numArgs &= ~DELAY;                   //   Mask out delay bit
-		Adafruit_ST7735_writecmddatabuf(cmd,addr,numArgs); addr+=numArgs;
+		AA_ST7735_writecmddatabuf(cmd,addr,numArgs); addr+=numArgs;
 
 		if(ms) {
 			ms = *addr;addr++; // Read post-command delay time (ms)
 			if(ms == 255) ms = 500;     // If 255, delay for 500 ms
-			Adafruit_ST7735_dealy_ms(ms);
+			AA_ST7735_dealy_ms(ms);
 		}
 	}
 }
 
 
 // Initialization for ST7735B screens
-const Adafruit_ST7735_displayInfo_t*  Adafruit_ST7735_initB(Adafruit_ST7735_displayInfo_t* di) {
+const AA_ST7735_displayInfo_t*  AA_ST7735_initB(AA_ST7735_displayInfo_t* di) {
 	MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,0,0,0);
-	Adafruit_ST7735_commandList(di,Bcmd);
+	AA_ST7735_commandList(di,Bcmd);
 	return di;
 }
 
 
 // Initialization for ST7735R screens (green or red tabs)
-const Adafruit_ST7735_displayInfo_t* Adafruit_ST7735_initR(Adafruit_ST7735_displayInfo_t* di,uint8_t options) {
+const AA_ST7735_displayInfo_t* AA_ST7735_initR(AA_ST7735_displayInfo_t* di,uint8_t options) {
 	if(options == INITR_GREENTAB) {
 		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,2,1,options);
-		Adafruit_ST7735_commandList(di,Rcmd1);
-		Adafruit_ST7735_commandList(di,Rcmd2green);
+		AA_ST7735_commandList(di,Rcmd1);
+		AA_ST7735_commandList(di,Rcmd2green);
 	} else if(options == INITR_144GREENTAB) {
 		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_144,2,3,options);
-		Adafruit_ST7735_commandList(di,Rcmd1);
-		Adafruit_ST7735_commandList(di,Rcmd2green144);
+		AA_ST7735_commandList(di,Rcmd1);
+		AA_ST7735_commandList(di,Rcmd2green144);
 	} else {
 		MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,0,0,options);
-		Adafruit_ST7735_commandList(di,Rcmd2red);
+		AA_ST7735_commandList(di,Rcmd2red);
 	}
-	Adafruit_ST7735_commandList(di,Rcmd3);
+	AA_ST7735_commandList(di,Rcmd3);
 
 	// if black, change MADCTL color filter
 	if (options == INITR_BLACKTAB) {
 		uint8_t data=0xC0;
-		Adafruit_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
+		AA_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
 	}
 
 	return di;
 }
 
 
-void Adafruit_ST7735_setWindowCD(const Adafruit_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata) {
+void AA_ST7735_setWindowCD(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata) {
 	uint8_t db[4];
 	//             XSTART                           XEND
 	db[0]=0x00;db[1]=x0+di->colstart;db[2]=0x00;db[3]=x1+di->colstart;
-	Adafruit_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
+	AA_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
 
 	//         YSTART                YEND
 	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
-	Adafruit_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
-	Adafruit_ST7735_writecmddatabuf(ST7735_RAMWR,colordata,(x1-x0)*(y1-y0)*2); // write to RAM
+	AA_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
+	AA_ST7735_writecmddatabuf(ST7735_RAMWR,colordata,(x1-x0)*(y1-y0)*2); // write to RAM
 }
 
-void Adafruit_ST7735_setWindowFILL(const Adafruit_ST7735_displayInfo_t* di, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, const uint16_t color){
+void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, const uint16_t color){
 	uint8_t db[4];
 	//             XSTART                           XEND
 	db[0]=0x00;db[1]=x0+di->colstart;db[2]=0x00;db[3]=x1+di->colstart;
-	Adafruit_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
+	AA_ST7735_writecmddatabuf(ST7735_CASET,db,4); // Column addr set
 
 	//         YSTART                YEND
 	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
-	Adafruit_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
-	Adafruit_ST7735_writecmddatafill(ST7735_RAMWR,color>>8,color &0x0ff,(x1-x0)*(y1-y0)); // write to RAM
+	AA_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
+	AA_ST7735_writecmddatafill(ST7735_RAMWR,color>>8,color &0x0ff,(x1-x0)*(y1-y0)); // write to RAM
 }
 
-/*
-void Adafruit_ST7735::pushColor(uint16_t color) {
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.beginTransaction(mySPISettings);
-#endif
-  *rsport |=  rspinmask;
-  *csport &= ~cspinmask;
-  
-  
-  spiwrite(color >> 8);
-  spiwrite(color);
 
-  *csport |= cspinmask;
-#if defined (SPI_HAS_TRANSACTION)
-    SPI.endTransaction();
-#endif
-}*/
 
-void Adafruit_ST7735_drawPixel(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, uint16_t color) {
-	if((x < 0) ||(x >= di->_width) || (y < 0) || (y >= di->_height)) return;
+void AA_ST7735_drawPixel(const AA_ST7735_displayInfo_t* di,int16_t x, int16_t y, uint16_t color) {
+	if((x < 0) ||(x >= di->width) || (y < 0) || (y >= di->height)) return;
 	uint8_t cd[2]={color >> 8,color&0x0ff};
-	Adafruit_ST7735_setWindowCD(di,x,y,x+1,y+1,cd);
+	AA_ST7735_setWindowCD(di,x,y,x+1,y+1,cd);
 }
 
 
-void Adafruit_ST7735_drawFastVLine(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t h, uint16_t color) {
+void AA_ST7735_drawFastVLine(const AA_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t h, uint16_t color) {
 	// Rudimentary clipping
-	if((x >= di->_width) || (y >= di->_height)) return;
-	if((y+h-1) >= di->_height) h = di->_height-y;
-	Adafruit_ST7735_setWindowFILL(di,x, y, x, y+h-1,color);
+	if((x >= di->width) || (y >= di->height)) return;
+	if((y+h-1) >= di->height) h = di->height-y;
+	AA_ST7735_setWindowFILL(di,x, y, x, y+h-1,color);
 }
 
 
-void Adafruit_ST7735_drawFastHLine(const Adafruit_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t w, uint16_t color) {
+void AA_ST7735_drawFastHLine(const AA_ST7735_displayInfo_t* di,int16_t x, int16_t y, int16_t w, uint16_t color) {
 
 	// Rudimentary clipping
-	if((x >= di->_width) || (y >= di->_height)) return;
-	if((x+w-1) >= di->_width)  w = di->_width-x;
-	Adafruit_ST7735_setWindowFILL(di,x, y, x+w-1, y,color);
+	if((x >= di->width) || (y >= di->height)) return;
+	if((x+w-1) >= di->width)  w = di->width-x;
+	AA_ST7735_setWindowFILL(di,x, y, x+w-1, y,color);
 }
 
 
 
-void Adafruit_ST7735_fillScreen(const Adafruit_ST7735_displayInfo_t* di,uint16_t color) {
-	Adafruit_ST7735_setWindowFILL(di,0, 0,  di->_width, di->_height, color);
+void AA_ST7735_fillScreen(const AA_ST7735_displayInfo_t* di,uint16_t color) {
+	AA_ST7735_setWindowFILL(di,0, 0,  di->width, di->height, color);
 }
 
 
 
 // fill a rectangle
-void Adafruit_ST7735_fillRect(const Adafruit_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+void AA_ST7735_fillRect(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
 
   // rudimentary clipping (drawChar w/big text requires this)
-  if((x >= di->_width) || (y >= di->_height)) return;
-  if((x + w - 1) >= di->_width)  w = di->_width  - x;
-  if((y + h - 1) >= di->_height) h = di->_height - y;
+  if((x >= di->width) || (y >= di->height)) return;
+  if((x + w - 1) >= di->width)  w = di->width  - x;
+  if((y + h - 1) >= di->height) h = di->height - y;
 
-  Adafruit_ST7735_setWindowFILL(di,x, y, x+w-1, y+h-1,color);
+  AA_ST7735_setWindowFILL(di,x, y, x+w-1, y+h-1,color);
 
 }
 
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
-uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b) {
+uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
@@ -359,7 +343,7 @@ uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b) {
 #define MADCTL_BGR 0x08
 #define MADCTL_MH  0x04
 
-void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di,uint8_t m) {
+void AA_ST7735_setRotation(AA_ST7735_displayInfo_t* di,uint8_t m) {
 	uint8_t data;
 	m = m % 4; // can't be higher than 3
 	switch (m) {
@@ -367,10 +351,10 @@ void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di,uint8_t m) {
 		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MX | MADCTL_MY | MADCTL_RGB;
 		data=MADCTL_MX | MADCTL_MY | MADCTL_BGR;
 		
-		di->_width  = ST7735_TFTWIDTH;
+		di->width  = ST7735_TFTWIDTH;
 		
-		if (di->tabcolor == INITR_144GREENTAB) di->_height = ST7735_TFTHEIGHT_144;
-		else di->_height = ST7735_TFTHEIGHT_18;
+		if (di->tabcolor == INITR_144GREENTAB) di->height = ST7735_TFTHEIGHT_144;
+		else di->height = ST7735_TFTHEIGHT_18;
 
 		break;
 	case 1:
@@ -378,47 +362,47 @@ void Adafruit_ST7735_setRotation(Adafruit_ST7735_displayInfo_t* di,uint8_t m) {
 		else data =MADCTL_MY | MADCTL_MV | MADCTL_BGR;
 		
 
-		if (di->tabcolor == INITR_144GREENTAB) di->_width = ST7735_TFTHEIGHT_144;
-		else di->_width = ST7735_TFTHEIGHT_18;
+		if (di->tabcolor == INITR_144GREENTAB) di->width = ST7735_TFTHEIGHT_144;
+		else di->width = ST7735_TFTHEIGHT_18;
 
-		di->_height = ST7735_TFTWIDTH;
+		di->height = ST7735_TFTWIDTH;
 		break;
 	case 2:
 		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_RGB;
 		else data=MADCTL_BGR;
 		
-		di->_width  = ST7735_TFTWIDTH;
-		if (di->tabcolor == INITR_144GREENTAB) di->_height = ST7735_TFTHEIGHT_144;
-		else di->_height = ST7735_TFTHEIGHT_18;
+		di->width  = ST7735_TFTWIDTH;
+		if (di->tabcolor == INITR_144GREENTAB) di->height = ST7735_TFTHEIGHT_144;
+		else di->height = ST7735_TFTHEIGHT_18;
 
 	break;
 	case 3:
 		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MX | MADCTL_MV | MADCTL_RGB;
 		else data=MADCTL_MX | MADCTL_MV | MADCTL_BGR;
 		
-		if (di->tabcolor == INITR_144GREENTAB) di->_width = ST7735_TFTHEIGHT_144;
-		else di->_width = ST7735_TFTHEIGHT_18;
+		if (di->tabcolor == INITR_144GREENTAB) di->width = ST7735_TFTHEIGHT_144;
+		else di->width = ST7735_TFTHEIGHT_18;
 
-		di->_height = ST7735_TFTWIDTH;
+		di->height = ST7735_TFTWIDTH;
 		break;
 	}
-	Adafruit_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
+	AA_ST7735_writecmddatabuf(ST7735_MADCTL,&data,1);
 
 }
 
 
-void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint8_t i) {
+void AA_ST7735_invertDisplay(const AA_ST7735_displayInfo_t* di, uint8_t i) {
 	(void)di;
-	Adafruit_ST7735_writecmddatabuf(i ? ST7735_INVON : ST7735_INVOFF,(uint8_t*)0/*NULL*/,0);
+	AA_ST7735_writecmddatabuf(i ? ST7735_INVON : ST7735_INVOFF,(uint8_t*)0/*NULL*/,0);
 }
 
 
-#define GFX_drawPixel Adafruit_ST7735_drawPixel
-#define GFX_drawFastHLine Adafruit_ST7735_drawFastHLine
-#define GFX_drawFastVLine Adafruit_ST7735_drawFastVLine
-#define GFX_fillRect Adafruit_ST7735_fillRect
-#define GFX_setWindowFILL Adafruit_ST7735_fillScreen
-#define GFX_displayInfo_t Adafruit_ST7735_displayInfo_t
+#define GFX_drawPixel AA_ST7735_drawPixel
+#define GFX_drawFastHLine AA_ST7735_drawFastHLine
+#define GFX_drawFastVLine AA_ST7735_drawFastVLine
+#define GFX_fillRect AA_ST7735_fillRect
+#define GFX_setWindowFILL AA_ST7735_fillScreen
+#define GFX_displayInfo_t AA_ST7735_displayInfo_t
 
 
 
