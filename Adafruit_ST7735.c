@@ -412,3 +412,33 @@ void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint
 	Adafruit_ST7735_writecmddatabuf(i ? ST7735_INVON : ST7735_INVOFF,(uint8_t*)0/*NULL*/,0);
 }
 
+
+#define GFX_drawPixel Adafruit_ST7735_drawPixel
+#define GFX_drawFastHLine Adafruit_ST7735_drawFastHLine
+#define GFX_drawFastVLine Adafruit_ST7735_drawFastVLine
+#define GFX_fillRect Adafruit_ST7735_fillRect
+#define GFX_setWindowFILL Adafruit_ST7735_fillScreen
+#define GFX_displayInfo_t Adafruit_ST7735_displayInfo_t
+
+
+
+#ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
+#include "Adafruit_ST7735_custom_gfx.h"
+#include "Adafruit_GFX_body.h"
+#else //use full GFX config
+
+#ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
+#include "Adafruit_ST7735_default_gfx.h"
+#include "Adafruit_GFX_body.h"
+#endif
+
+#endif
+
+
+#undef GFX_drawPixel
+#undef GFX_drawFastHLine
+#undef GFX_drawFastVLine
+#undef GFX_fillRect
+#undef GFX_setWindowFILL
+#undef GFX_displayInfo_t
+

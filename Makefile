@@ -20,5 +20,5 @@ Adafruit_ST7735_c.a: $(OBJS)
 banner:
 	@echo -ne "====================================\n=== CC VERSION: "`$(CC) --version | head -n 1`"\n====================================\n"
 #dependancies:
-Adafruit_ST7735.o:Adafruit_ST7735.c
-Adafruit_ST7735.c:Adafruit_ST7735_c.h
+$(BUILDDIR)/Adafruit_ST7735.o:Adafruit_ST7735.c Adafruit_ST7735_c.h Adafruit_ST7735_default_gfx.h Adafruit_GFX_proto.h Adafruit_GFX_body.h
+
