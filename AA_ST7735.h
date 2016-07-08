@@ -178,13 +178,13 @@ uint16_t Adafruit_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
-#include "Adafruit_ST7735_custom_gfx.h"
+#include "AA_ST7735_custom_gfx.h"
 #else //use full GFX config
 
 #ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
 
-#include "Adafruit_ST7735_default_gfx.h"
-#include "Adafruit_GFX_proto.h"
+#include "AA_ST7735_default_gfx.h"
+#include "AA-GFX/AA_GFX_proto.h"
 #endif
 
 #endif

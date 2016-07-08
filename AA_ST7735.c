@@ -43,7 +43,7 @@
  * 
  ****************************************************/
 
-#include "Adafruit_ST7735_c.h"
+#include "AA_ST7735.h"
 
 
 static inline uint16_t swapcolor(uint16_t x) { 
@@ -423,13 +423,13 @@ void Adafruit_ST7735_invertDisplay(const Adafruit_ST7735_displayInfo_t* di, uint
 
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
-#include "Adafruit_ST7735_custom_gfx.h"
-#include "Adafruit_GFX_body.h"
+#include "AA_ST7735_custom_gfx.h"
+#include "AA-GFX/AA_GFX_body.h"
 #else //use full GFX config
 
 #ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
-#include "Adafruit_ST7735_default_gfx.h"
-#include "Adafruit_GFX_body.h"
+#include "AA_ST7735_default_gfx.h"
+#include "AA-GFX/AA_GFX_body.h"
 #endif
 
 #endif
