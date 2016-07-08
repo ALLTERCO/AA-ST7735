@@ -1,5 +1,5 @@
 .kdev4/
-Adafruit-ST7735-Library.kdev4
+*.kdev4
 build
-Adafruit_ST7735_custom_gfx.h
 *.a
+AA_ST7735_custom_gfx.h
