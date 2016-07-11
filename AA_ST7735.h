@@ -128,6 +128,18 @@
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
 
+//ST7735RC variant colors
+#define	ST7735RC_BLACK   0x0000
+#define ST7735RC_WHITE   0xFFFF
+
+#define	ST7735RC_RED     0x001F
+#define	ST7735RC_GREEN    0x07E0
+#define	ST7735RC_BLUE   0xF800
+
+#define ST7735RC_CYAN    (ST7735RC_GREEN | ST7735RC_BLUE)
+#define ST7735RC_MAGENTA (ST7735RC_RED | ST7735RC_BLUE)
+#define ST7735RC_YELLOW  (ST7735RC_RED | ST7735RC_GREEN)
+
 //You must provide this functions 
 //to keep things simple we assume single display per device
 //and we do not pass display info to HW Line driver functions below
@@ -159,12 +171,14 @@ const AA_ST7735_displayInfo_t* AA_ST7735_initR(AA_ST7735_displayInfo_t* di, uint
 
 //all the folowing functions get a const AA_ST7735_displayInfo_t* di for consistancy though not all of them might need it
 void AA_ST7735_setWindowCD(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata);
+static inline void AA_ST7735_rawImg(const AA_ST7735_displayInfo_t* di,uint8_t x, uint8_t y, int16_t w, int16_t h,const uint8_t*rawimg){AA_ST7735_setWindowCD (di,x,y,x+w-1,y+h-1,rawimg);};
 void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint16_t color);
 void AA_ST7735_fillScreen(const AA_ST7735_displayInfo_t* di, uint16_t color);
 void AA_ST7735_drawPixel(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, uint16_t color);
 void AA_ST7735_drawFastVLine(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t h, uint16_t color);
 void AA_ST7735_drawFastHLine(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, uint16_t color);
 void AA_ST7735_fillRect(const AA_ST7735_displayInfo_t* di, int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+//For the second roration to succeed you need to reinit the display
 void AA_ST7735_setRotation(AA_ST7735_displayInfo_t* di, uint8_t r);
 void AA_ST7735_invertDisplay(const AA_ST7735_displayInfo_t* di, uint8_t i /*bool*/); 
 
@@ -174,17 +188,32 @@ void AA_ST7735_commandList(const AA_ST7735_displayInfo_t* di, const uint8_t *add
 //colorspace convertion utility func
 uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
+#define GFX_displayInfo_t AA_ST7735_displayInfo_t
 
 #define GFX_drawPixel AA_ST7735_drawPixel
 #define GFX_drawFastHLine AA_ST7735_drawFastHLine
 #define GFX_drawFastVLine AA_ST7735_drawFastVLine
 #define GFX_fillRect AA_ST7735_fillRect
+#define GFX_fillScreen AA_ST7735_fillScreen
+#define GFX_rawImg AA_ST7735_rawImg
 
 #define GFX_setWindowFILL AA_ST7735_setWindowFILL
 #define GFX_setWindowCD AA_ST7735_setWindowCD
+#define GFX_setRotation AA_ST7735_setRotation
 
-#define GFX_displayInfo_t AA_ST7735_displayInfo_t
 
+#ifndef AA_ST7735_DISPLAY_ID 
+#define AA_ST7735_DISPLAY_ID 0x10007735
+#endif
+#ifndef AA_DEFAULT_DISPLAY
+#define AA_DEFAULT_DISPLAY  0x10000000
+#endif
+
+#if AA_ST7735_DISPLAY_ID == AA_DEFAULT_DISPLAY
+#define AA_GFX_DEFAULT_DISPLAY AA_ST7735_DISPLAY_ID
+#else
+#undef AA_GFX_DEFAULT_DISPLAY
+#endif
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
 #include "AA_ST7735_custom_gfx.h"
@@ -199,13 +228,37 @@ uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
 #endif
 
+#ifndef AA_GFX_DEFAULT_DISPLAY
+
+#undef GFX_displayInfo_t
 
 #undef GFX_drawPixel
 #undef GFX_drawFastHLine
 #undef GFX_drawFastVLine
 #undef GFX_fillRect
-#undef GFX_setWindowFILL
-#undef GFX_displayInfo_t
+#undef GFX_fillScreen
 
+#undef GFX_setWindowFILL
+#undef GFX_setWindowCD
+#undef GFX_rawImg
+#undef GFX_setRotation 
+
+#undef GFX_drawLine 
+#undef GFX_drawRect  
+#undef GFX_drawCircle 
+#undef GFX_drawCircleHelper 
+#undef GFX_fillCircle 
+#undef GFX_fillCircleHelper 
+#undef GFX_drawRoundRect 
+#undef GFX_fillRoundRect 
+#undef GFX_drawTriangle 
+#undef GFX_fillTriangle
+#undef GFX_drawBitmapT 
+#undef GFX_drawBitmapBG 
+#undef GFX_drawXBitmapT 
+#undef GFX_drawXBitmapBG 
+#undef GFX_drawChar 
+
+#endif
 
 #endif

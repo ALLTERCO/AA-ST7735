@@ -44,7 +44,6 @@
  ****************************************************/
 
 #include "AA_ST7735.h"
-
 /*
 static inline uint16_t swapcolor(uint16_t x) { 
   return (x << 11) | (x & 0x07E0) | (x >> 11);
@@ -268,7 +267,7 @@ void AA_ST7735_setWindowCD(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t
 	//         YSTART                YEND
 	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
 	AA_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
-	AA_ST7735_writecmddatabuf(ST7735_RAMWR,colordata,(x1-x0)*(y1-y0)*2); // write to RAM
+	AA_ST7735_writecmddatabuf(ST7735_RAMWR,colordata,(x1-x0+1)*(y1-y0+1)*2); // write to RAM
 }
 
 void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, const uint16_t color){
@@ -280,7 +279,7 @@ void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di, uint8_t x0, uint
 	//         YSTART                YEND
 	db[1]=y0+di->rowstart;db[3]=y1+di->rowstart;
 	AA_ST7735_writecmddatabuf(ST7735_RASET,db,4); // Row addr set
-	AA_ST7735_writecmddatafill(ST7735_RAMWR,color>>8,color &0x0ff,(x1-x0)*(y1-y0)); // write to RAM
+	AA_ST7735_writecmddatafill(ST7735_RAMWR,color>>8,color &0x0ff,(x1-x0+1)*(y1-y0+1)); // write to RAM
 }
 
 
@@ -288,7 +287,7 @@ void AA_ST7735_setWindowFILL(const AA_ST7735_displayInfo_t* di, uint8_t x0, uint
 void AA_ST7735_drawPixel(const AA_ST7735_displayInfo_t* di,int16_t x, int16_t y, uint16_t color) {
 	if((x < 0) ||(x >= di->width) || (y < 0) || (y >= di->height)) return;
 	uint8_t cd[2]={color >> 8,color&0x0ff};
-	AA_ST7735_setWindowCD(di,x,y,x+1,y+1,cd);
+	AA_ST7735_setWindowCD(di,x,y,x,y,cd);
 }
 
 
@@ -358,6 +357,7 @@ void AA_ST7735_setRotation(AA_ST7735_displayInfo_t* di,uint8_t m) {
 
 		break;
 	case 1:
+		{uint8_t tmp=di->rowstart;di->rowstart=di->colstart; di->colstart=tmp;}
 		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MY | MADCTL_MV | MADCTL_RGB;
 		else data =MADCTL_MY | MADCTL_MV | MADCTL_BGR;
 		
@@ -377,6 +377,8 @@ void AA_ST7735_setRotation(AA_ST7735_displayInfo_t* di,uint8_t m) {
 
 	break;
 	case 3:
+		{uint8_t tmp=di->rowstart;di->rowstart=di->colstart; di->colstart=tmp;}
+		
 		if (di->tabcolor == INITR_BLACKTAB) data=MADCTL_MX | MADCTL_MV | MADCTL_RGB;
 		else data=MADCTL_MX | MADCTL_MV | MADCTL_BGR;
 		
@@ -402,8 +404,9 @@ void AA_ST7735_invertDisplay(const AA_ST7735_displayInfo_t* di, uint8_t i) {
 #define GFX_drawFastVLine AA_ST7735_drawFastVLine
 #define GFX_fillRect AA_ST7735_fillRect
 #define GFX_setWindowFILL AA_ST7735_fillScreen
-#define GFX_displayInfo_t AA_ST7735_displayInfo_t
+#define GFX_rawImg AA_ST7735_rawImg
 
+#define GFX_displayInfo_t AA_ST7735_displayInfo_t
 
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 

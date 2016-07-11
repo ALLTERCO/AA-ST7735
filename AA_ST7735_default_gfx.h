@@ -21,3 +21,6 @@
 #define GFX_drawXBitmapBG AA_ST7735_drawXBitmapBG
 
 #define GFX_drawChar AA_ST7735_drawChar
+#define GFX_setCursor AA_ST7735_setCursor
+
+#define GFX_rawImgFromFile AA_ST7735_rawImgFromFile
