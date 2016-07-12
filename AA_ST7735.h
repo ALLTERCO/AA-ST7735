@@ -140,6 +140,21 @@
 #define ST7735RC_MAGENTA (ST7735RC_RED | ST7735RC_BLUE)
 #define ST7735RC_YELLOW  (ST7735RC_RED | ST7735RC_GREEN)
 
+// Pass 8-bit (each) R,G,B, get back 16-bit packed color
+#define  AA_ST7735_COLOR565(r,g,b)((uint16_t)(\
+	  ((((uint16_t)(r)) & 0xF8) << 8) \
+	| ((((uint16_t)(g)) & 0xFC) << 3) \
+	|  (((uint16_t)(b)) >> 3) \
+))
+
+// Pass 8-bit (each) R,G,B, get back 16-bit packed color
+#define  AA_ST7735RC_COLOR565(r,g,b) ((uint16_t)(\
+	  ((((uint16_t)(b)) & 0xF8) << 8) \
+	| ((((uint16_t)(g)) & 0xFC) << 3) \
+	|  (((uint16_t)(r)) >> 3) \
+))
+
+
 //You must provide this functions 
 //to keep things simple we assume single display per device
 //and we do not pass display info to HW Line driver functions below

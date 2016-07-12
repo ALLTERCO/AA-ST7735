@@ -333,6 +333,12 @@ uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
+// Pass 8-bit (each) R,G,B, get back 16-bit packed color
+uint16_t AA_ST7735RC_Color565(uint8_t r, uint8_t g, uint8_t b) {
+  return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
+}
+
+
 
 #define MADCTL_MY  0x80
 #define MADCTL_MX  0x40
