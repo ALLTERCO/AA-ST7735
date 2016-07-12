@@ -273,7 +273,9 @@ uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 #undef GFX_drawXBitmapT 
 #undef GFX_drawXBitmapBG 
 #undef GFX_drawChar 
-
+#undef GFX_setCursor
+#undef GFX_rawImgFromFile
+#undef GFX_rawImgFromFH
 #endif
 
 #endif
