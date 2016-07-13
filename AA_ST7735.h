@@ -155,6 +155,11 @@
 ))
 
 
+#define  AA_ST7735_COLOR565_(rgb) AA_ST7735_COLOR565((((rgb)&0x00FF0000)>>16),(((rgb)&0x0000FF00)>>8),((rgb)&0x000000FF))
+
+#define  AA_ST7735RC_COLOR565_(rgb) AA_ST7735RC_COLOR565((((rgb)&0x00FF0000)>>16),(((rgb)&0x0000FF00)>>8),((rgb)&0x000000FF))
+
+
 //You must provide this functions 
 //to keep things simple we assume single display per device
 //and we do not pass display info to HW Line driver functions below
