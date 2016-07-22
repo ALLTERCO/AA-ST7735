@@ -2,4 +2,5 @@
 *.kdev4
 build
 *.a
+png2bin_*
 AA_ST7735_custom_gfx.h
