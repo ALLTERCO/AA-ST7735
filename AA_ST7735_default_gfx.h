@@ -20,8 +20,14 @@
 #define GFX_drawXBitmapT AA_ST7735_drawXBitmapT
 #define GFX_drawXBitmapBG AA_ST7735_drawXBitmapBG
 
-#define GFX_drawChar AA_ST7735_drawChar
 #define GFX_setCursor AA_ST7735_setCursor
+#define GFX_setCursorRel AA_ST7735_setCursorRel
+#define GFX_setWrap AA_ST7735_setWrap
+
+#define GFX_drawChar AA_ST7735_drawChar
+#define GFX_putsEx  AA_ST7735_putsEx
+#define GFX_putsSetup AA_ST7735_putsSetup
+#define GFX_puts AA_ST7735_puts
 
 #define GFX_rawImgFromFile AA_ST7735_rawImgFromFile
 #define GFX_rawImgFromFH AA_ST7735_rawImgFromFH

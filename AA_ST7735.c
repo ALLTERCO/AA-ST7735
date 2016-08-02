@@ -416,15 +416,13 @@ void AA_ST7735_invertDisplay(const AA_ST7735_displayInfo_t* di, uint8_t i) {
 
 
 #ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
-#include "AA_ST7735_custom_gfx.h"
-#include "AA-GFX/AA_GFX_body.h"
+	#include "AA_ST7735_custom_gfx.h"
+	#include "AA-GFX/AA_GFX_body.h"
 #else //use full GFX config
-
-#ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
-#include "AA_ST7735_default_gfx.h"
-#include "AA-GFX/AA_GFX_body.h"
-#endif
-
+	#ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
+		#include "AA_ST7735_default_gfx.h"
+		#include "AA-GFX/AA_GFX_body.h"
+	#endif
 #endif
 
 

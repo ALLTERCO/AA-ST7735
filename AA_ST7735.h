@@ -49,12 +49,24 @@
 #include <stdint.h>
 
 #ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
-#include "AA-GFX/AA_GFX_common.h"
-#include "AA-GFX/gfxfont.h"
-#else 
-#define AA_GFX_COMMON_DI_INCLUDES
-#define AA_GFX_COMMON_DI_INITS(di)
-#endif
+
+	#ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
+		#include "AA_ST7735_custom_gfx.h"
+	#else //use full GFX config
+		#include "AA_ST7735_default_gfx.h"
+	#endif //ADAFRUIT_ST7735_CUSTOM_GFX
+
+
+	#include "AA-GFX/gfxfont.h"
+	#include "AA-GFX/AA_GFX_common.h"
+
+#else //NO ADAFRUIT_ST7735_NO_GFX 
+
+	#define AA_GFX_COMMON_DI_INCLUDES
+	#define AA_GFX_COMMON_DI_INITS(di)
+
+#endif // NO ADAFRUIT_ST7735_NO_GFX
+
 
 // some flags for initR() :(
 #define INITR_GREENTAB 0x0
@@ -223,64 +235,63 @@ uint16_t AA_ST7735_Color565(uint8_t r, uint8_t g, uint8_t b);
 
 
 #ifndef AA_ST7735_DISPLAY_ID 
-#define AA_ST7735_DISPLAY_ID 0x10007735
+	#define AA_ST7735_DISPLAY_ID 0x10007735
 #endif
 #ifndef AA_DEFAULT_DISPLAY
-#define AA_DEFAULT_DISPLAY  0x10000000
+	#define AA_DEFAULT_DISPLAY  0x10000000
 #endif
 
 #if AA_ST7735_DISPLAY_ID == AA_DEFAULT_DISPLAY
-#define AA_GFX_DEFAULT_DISPLAY AA_ST7735_DISPLAY_ID
+	#define AA_GFX_DEFAULT_DISPLAY AA_ST7735_DISPLAY_ID
 #else
-#undef AA_GFX_DEFAULT_DISPLAY
+	#undef AA_GFX_DEFAULT_DISPLAY
 #endif
-
-#ifdef ADAFRUIT_ST7735_CUSTOM_GFX //we got custom GFX config 
-#include "AA_ST7735_custom_gfx.h"
-#include "AA-GFX/AA_GFX_proto.h"
-#else //use full GFX config
 
 #ifndef ADAFRUIT_ST7735_NO_GFX //uness not GFX  disabled
-
-#include "AA_ST7735_default_gfx.h"
-#include "AA-GFX/AA_GFX_proto.h"
-#endif
-
+	#include "AA-GFX/AA_GFX_proto.h"
 #endif
 
 #ifndef AA_GFX_DEFAULT_DISPLAY
 
-#undef GFX_displayInfo_t
+	#undef GFX_displayInfo_t
 
-#undef GFX_drawPixel
-#undef GFX_drawFastHLine
-#undef GFX_drawFastVLine
-#undef GFX_fillRect
-#undef GFX_fillScreen
+	#undef GFX_drawPixel
+	#undef GFX_drawFastHLine
+	#undef GFX_drawFastVLine
+	#undef GFX_fillRect
+	#undef GFX_fillScreen
 
-#undef GFX_setWindowFILL
-#undef GFX_setWindowCD
-#undef GFX_rawImg
-#undef GFX_setRotation 
+	#undef GFX_setWindowFILL
+	#undef GFX_setWindowCD
+	#undef GFX_rawImg
+	#undef GFX_setRotation 
 
-#undef GFX_drawLine 
-#undef GFX_drawRect  
-#undef GFX_drawCircle 
-#undef GFX_drawCircleHelper 
-#undef GFX_fillCircle 
-#undef GFX_fillCircleHelper 
-#undef GFX_drawRoundRect 
-#undef GFX_fillRoundRect 
-#undef GFX_drawTriangle 
-#undef GFX_fillTriangle
-#undef GFX_drawBitmapT 
-#undef GFX_drawBitmapBG 
-#undef GFX_drawXBitmapT 
-#undef GFX_drawXBitmapBG 
-#undef GFX_drawChar 
-#undef GFX_setCursor
-#undef GFX_rawImgFromFile
-#undef GFX_rawImgFromFH
-#endif
+	#undef GFX_drawLine 
+	#undef GFX_drawRect  
+	#undef GFX_drawCircle 
+	#undef GFX_drawCircleHelper 
+	#undef GFX_fillCircle 
+	#undef GFX_fillCircleHelper 
+	#undef GFX_drawRoundRect 
+	#undef GFX_fillRoundRect 
+	#undef GFX_drawTriangle 
+	#undef GFX_fillTriangle
+	#undef GFX_drawBitmapT 
+	#undef GFX_drawBitmapBG 
+	#undef GFX_drawXBitmapT 
+	#undef GFX_drawXBitmapBG 
+	#undef GFX_setCursor
+	#undef GFX_setCursorRel
+	#undef GFX_setWrap
+	#undef GFX_drawChar 
+	#undef GFX_putsEx
+	#undef GFX_putsSetup
+	#undef GFX_puts
+	
 
-#endif
+
+	#undef GFX_rawImgFromFile
+	#undef GFX_rawImgFromFH
+#endif //AA_GFX_DEFAULT_DISPLAY
+
+#endif //_ADAFRUIT_ST7735_C_H_
