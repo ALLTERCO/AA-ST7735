@@ -33,4 +33,11 @@
 
 #define GFX_rawImgFromFile AA_ST7735_rawImgFromFile
 #define GFX_rawImgFromFH AA_ST7735_rawImgFromFH
-#define GFX_rawImgFromSpack AA_ST7735_GFX_rawImgFromSpack
+#define GFX_rawImgFromSpack AA_ST7735_rawImgFromSpack
+
+#define GFX_rleImgFromFile AA_ST7735_rleImgFromFile
+#define GFX_rleImgFromFH AA_ST7735_rleImgFromFH
+#define GFX_rleImgFromSpack AA_ST7735_rleImgFromSpack
+
+#define GFX_ImgFromSpack AA_ST7735_ImgFromSpack
+
