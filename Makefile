@@ -20,6 +20,7 @@ staticlib: dirs  AA_ST7735_c.a
 
 AA_ST7735_c.a: $(OBJS)
 	$(AR) $(ARFLAGS)  $@ $^
+	@echo "=== $@ is ready"
 banner:
 	@echo -ne "====================================\n=== CC VERSION: "`$(CC) --version | head -n 1`"\n====================================\n"
 #dependancies:

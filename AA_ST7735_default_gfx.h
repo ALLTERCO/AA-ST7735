@@ -27,6 +27,8 @@
 #define GFX_drawChar AA_ST7735_drawChar
 #define GFX_putsEx  AA_ST7735_putsEx
 #define GFX_putsSetup AA_ST7735_putsSetup
+#define GFX_putsSet AA_ST7735_putsSet
+#define GFX_putsSetRel AA_ST7735_putsSetRel
 #define GFX_puts AA_ST7735_puts
 
 #define GFX_rawImgFromFile AA_ST7735_rawImgFromFile
