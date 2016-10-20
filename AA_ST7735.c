@@ -7,7 +7,7 @@
  ****************************************************/
 
 /**********
- * T his library is free software; you can redistribute it and/or modify it under
+ * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation; either version 2.1 of the License, or (at your
  * option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
@@ -19,6 +19,14 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
  **********/
+
+
+
+/*
+ We also support the device from http://www.hotmcu.com/18-spi-tft-display-160x128-18bit-color-st7735-driver-p-143.html 
+ that claims to be R variant but actualy it needs some small twaking done in AA_ST7735_initRS
+*/
+
 
 //Disclimer (sans licens lines) from C++ sources written by 
 //Limor Fried/Ladyada for Adafruit Industries.
@@ -228,6 +236,13 @@ void AA_ST7735_commandList(const AA_ST7735_displayInfo_t* di, const uint8_t *add
 const AA_ST7735_displayInfo_t*  AA_ST7735_initB(AA_ST7735_displayInfo_t* di) {
 	MEMINIT_ADAFRUIT_ST7735_DISPLAYINFO_T(di,ST7735_TFTHEIGHT_18,0,0,0);
 	AA_ST7735_commandList(di,Bcmd);
+	return di;
+}
+
+const AA_ST7735_displayInfo_t* AA_ST7735_initRS(AA_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */) { //For the device from http://www.hotmcu.com/18-spi-tft-display-160x128-18bit-color-st7735-driver-p-143.html 
+	AA_ST7735_initR(di,tabcolor);
+	di->colstart=0;
+	di->rowstart=0;
 	return di;
 }
 

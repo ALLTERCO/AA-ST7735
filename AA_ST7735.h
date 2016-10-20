@@ -7,7 +7,7 @@
  ****************************************************/
 
 /**********
- * T his library is free software; you can redistribute it and/or modify it under
+ * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the
  * Free Software Foundation; either version 2.1 of the License, or (at your
  * option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
@@ -19,6 +19,11 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
  **********/
+
+/*
+ We also support the device from http://www.hotmcu.com/18-spi-tft-display-160x128-18bit-color-st7735-driver-p-143.html 
+ that claims to be R variant but actualy it needs some small twaking done in AA_ST7735_initRS
+ */
 
 //Disclimer (sans licens lines) from C++ sources written by 
 //Limor Fried/Ladyada for Adafruit Industries.
@@ -200,6 +205,7 @@ typedef struct {
 //this functions init the displayInfo in di return the pointer to it just to make more obvious how to obtain const AA_ST7735_displayInfo_t*
 const AA_ST7735_displayInfo_t* AA_ST7735_initB(AA_ST7735_displayInfo_t* di); // for ST7735B displays
 const AA_ST7735_displayInfo_t* AA_ST7735_initR(AA_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */); // for ST7735R
+const AA_ST7735_displayInfo_t* AA_ST7735_initRS(AA_ST7735_displayInfo_t* di, uint8_t tabcolor/* some of INITR_XXXXXTAB */); //For the device from http://www.hotmcu.com/18-spi-tft-display-160x128-18bit-color-st7735-driver-p-143.html 
 
 //all the folowing functions get a const AA_ST7735_displayInfo_t* di for consistancy though not all of them might need it
 void AA_ST7735_setWindowCD(const AA_ST7735_displayInfo_t* di,uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1,const uint8_t*colordata);
